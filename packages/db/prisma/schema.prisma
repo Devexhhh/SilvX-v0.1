@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  USER_INR
+  USER_SILVER
+  SYSTEM_INR
+  SYSTEM_SILVER
+}
+
+enum AssetType {
+  INR
+  SILVER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model Account {
+  id        String      @id @default(uuid())
+  userId    String?
+  type      AccountType
+  createdAt DateTime    @default(now())
+}
+
+model LedgerEntry {
+  id              String   @id @default(uuid())
+  debitAccountId  String
+  creditAccountId String
+  amount          Decimal
+  asset           AssetType
+  referenceType   String
+  referenceId     String
+  createdAt       DateTime @default(now())
+}
