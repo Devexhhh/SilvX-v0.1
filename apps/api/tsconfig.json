@@ -16,6 +16,9 @@
             ],
             "@repo/users": [
                 "../../packages/users"
+            ],
+            "@repo/deposits": [
+                "../../packages/deposits"
             ]
         }
     }
