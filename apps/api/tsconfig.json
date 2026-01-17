@@ -13,6 +13,9 @@
             ],
             "@repo/ledger": [
                 "../../packages/ledger"
+            ],
+            "@repo/users": [
+                "../../packages/users"
             ]
         }
     }
