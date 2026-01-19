@@ -33,12 +33,12 @@ model Account {
 }
 
 model LedgerEntry {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   debitAccountId  String
   creditAccountId String
   amount          Decimal
   asset           AssetType
   referenceType   String
   referenceId     String
-  createdAt       DateTime @default(now())
+  createdAt       DateTime  @default(now())
 }
