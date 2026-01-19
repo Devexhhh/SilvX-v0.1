@@ -1,0 +1,26 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@repo/db": [
+                "."
+            ],
+            "@repo/utils": [
+                "../utils"
+            ],
+            "@repo/ledger": [
+                "../ledger"
+            ],
+            "@repo/users": [
+                "../users"
+            ],
+            "@repo/deposits": [
+                "../deposits"
+            ],
+            "@repo/silver": [
+                "../silver"
+            ]
+        }
+    }
+}
