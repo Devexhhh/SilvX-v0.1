@@ -1,7 +1,5 @@
 import express from "express";
 import cors from "cors";
-import { UsersService } from "@repo/users";
-import { DepositsService } from "@repo/deposits";
 
 
 const app = express();

@@ -19,6 +19,9 @@
             ],
             "@repo/deposits": [
                 "../../packages/deposits"
+            ],
+            "@repo/silver": [
+                "../../packages/silver"
             ]
         }
     }
