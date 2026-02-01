@@ -4,6 +4,19 @@ import Decimal from "@repo/utils/decimal";
 export type Asset = "INR" | "SILVER";
 
 export class LedgerService {
+    async createEntryTx(tx: any, params: {
+        debitAccountId: string;
+        creditAccountId: string;
+        amount: Decimal;
+        asset: "INR" | "SILVER";
+        referenceType: string;
+        referenceId: string;
+    }) {
+        return tx.ledgerEntry.create({
+            data: params,
+        });
+    }
+
     async createEntry(params: {
         debitAccountId: string;
         creditAccountId: string;
