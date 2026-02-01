@@ -22,6 +22,9 @@
             ],
             "@repo/silver": [
                 "../../packages/silver"
+            ],
+            "@repo/pricing": [
+                "../../packages/pricing"
             ]
         }
     }
