@@ -2,10 +2,12 @@ import prisma from "@repo/db";
 import { LedgerService } from "@repo/ledger";
 import { Decimal } from "@repo/utils";
 import { PriceService } from "@repo/pricing";
+import { LimitsService } from "@repo/limits";
 
 export class SilverService {
     private ledger = new LedgerService();
     private pricing = new PriceService();
+    private limits = new LimitsService();
 
     async buySilver(params: {
         userId: string;
@@ -18,7 +20,10 @@ export class SilverService {
             throw new Error("INR amount must be > 0");
         }
 
-        // 🔒 Fetch price internally (single source of truth)
+        // ✅ LIMIT: INR buy limits (before DB work)
+        await this.limits.validateBuyInr(inrAmount);
+
+        // 🔒 Fetch price internally
         const pricePerGram = await this.pricing.getSilverPricePerGram();
         if (pricePerGram.lte(0)) {
             throw new Error("Invalid silver price");
@@ -111,6 +116,18 @@ export class SilverService {
             if (!systemInr || !systemSilver) {
                 throw new Error("System accounts missing");
             }
+
+            // ✅ LIMIT: cannot sell more silver than owned
+            const userSilverBalance = await this.ledger.getBalanceTx(
+                tx,
+                userSilver.id,
+                "SILVER"
+            );
+
+            await this.limits.validateSellSilver(
+                silverQty,
+                userSilverBalance
+            );
 
             // SILVER leg: user → system
             await this.ledger.createEntryTx(tx, {
