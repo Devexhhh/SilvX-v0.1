@@ -4,6 +4,34 @@ import Decimal from "@repo/utils/decimal";
 export type Asset = "INR" | "SILVER";
 
 export class LedgerService {
+    async getBalanceTx(
+        tx: any,
+        accountId: string,
+        asset: "INR" | "SILVER"
+    ) {
+        const credits = await tx.ledgerEntry.aggregate({
+            _sum: { amount: true },
+            where: {
+                creditAccountId: accountId,
+                asset,
+            },
+        });
+
+        const debits = await tx.ledgerEntry.aggregate({
+            _sum: { amount: true },
+            where: {
+                debitAccountId: accountId,
+                asset,
+            },
+        });
+
+        return (
+            (credits._sum.amount ?? new Decimal(0)).minus(
+                debits._sum.amount ?? new Decimal(0)
+            )
+        );
+    }
+
     async createEntryTx(tx: any, params: {
         debitAccountId: string;
         creditAccountId: string;
