@@ -25,6 +25,9 @@
             ],
             "@repo/pricing": [
                 "../../packages/pricing"
+            ],
+            "@repo/limits": [
+                "../../packages/limits"
             ]
         }
     }
