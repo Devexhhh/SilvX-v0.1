@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { apiGet } from "../lib/api";
 
-export default function BalanceCard({ userId }: { userId: string }) {
+export default function BalanceCard({
+    userId,
+    refreshSignal,
+}: {
+    userId: string;
+    refreshSignal: number;
+}) {
     const [balance, setBalance] = useState<any>(null);
 
     async function load() {
@@ -13,7 +19,7 @@ export default function BalanceCard({ userId }: { userId: string }) {
 
     useEffect(() => {
         load();
-    }, []);
+    }, [refreshSignal]);
 
     if (!balance) return <div>Loading balances...</div>;
 
