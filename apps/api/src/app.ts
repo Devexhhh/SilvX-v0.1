@@ -6,7 +6,7 @@ import deposits from "./routes/deposits";
 import silver from "./routes/silver";
 import balances from "./routes/balances";
 import transactions from "./routes/transactions";
-
+import admin from "./routes/admin";
 
 console.log("APP FILE LOADED");
 
@@ -29,12 +29,14 @@ app.use("/deposits", deposits);
 app.use("/silver", silver);
 app.use("/balances", balances);
 app.use("/transactions", transactions);
+app.use("/admin", admin);
 
 app.use((err: any, req: any, res: any, next: any) => {
-    console.error(err);
+    console.error("ERROR:", err.message);
 
     res.status(400).json({
-        error: err.message || "Something went wrong",
+        success: false,
+        message: err.message || "Something went wrong",
     });
 });
 
