@@ -7,8 +7,11 @@ console.log("SILVER ROUTE LOADED");
 const router = Router();
 const silver = new SilverService();
 
-router.post("/buy", async (req, res, next) => {
-    try {
+import { asyncHandler } from "../utils/asyncHandler";
+
+router.post(
+    "/buy",
+    asyncHandler(async (req: any, res: any) => {
         const { userId, inrAmount, referenceId } = req.body;
 
         const result = await silver.buySilver({
@@ -18,13 +21,13 @@ router.post("/buy", async (req, res, next) => {
         });
 
         res.json(result);
-    } catch (err) {
-        next(err);
-    }
-});
+    })
+);
 
-router.post("/sell", async (req, res, next) => {
-    try {
+
+router.post(
+    "/sell",
+    asyncHandler(async (req: any, res: any) => {
         const { userId, silverQty, referenceId } = req.body;
 
         const result = await silver.sellSilver({
@@ -34,9 +37,7 @@ router.post("/sell", async (req, res, next) => {
         });
 
         res.json(result);
-    } catch (err) {
-        next(err);
-    }
-});
+    })
+);
 
 export default router;
