@@ -9,6 +9,12 @@ import TransactionHistory from "../components/TransactionHistory";
 
 export default function Home() {
   const [userId, setUserId] = useState("");
+  const [refresh, setRefresh] = useState(0);
+
+  function triggerRefresh() {
+    setRefresh((prev) => prev + 1);
+  }
+
 
   async function createUser() {
     const res = await apiPost("/users", {
@@ -44,10 +50,20 @@ export default function Home() {
             Deposit ₹1000
           </button>
 
-          <BalanceCard userId={userId} />
+          <BalanceCard userId={userId} refreshSignal={refresh} />
 
-          <TradeForm userId={userId} type="buy" />
-          <TradeForm userId={userId} type="sell" />
+          <TradeForm
+            userId={userId}
+            type="buy"
+            onSuccess={triggerRefresh}
+          />
+
+          <TradeForm
+            userId={userId}
+            type="sell"
+            onSuccess={triggerRefresh}
+          />
+
           <TransactionHistory userId={userId} />
 
         </>
