@@ -1,6 +1,14 @@
 import express from "express";
 import cors from "cors";
 
+import users from "./routes/users";
+import deposits from "./routes/deposits";
+import silver from "./routes/silver";
+import balances from "./routes/balances";
+import transactions from "./routes/transactions";
+
+
+console.log("APP FILE LOADED");
 
 const app = express();
 
@@ -13,6 +21,21 @@ app.get("/", (_, res) => {
 
 app.get("/health", (_, res) => {
     res.json({ status: "ok" });
+});
+
+// 🔥 Mount domain routes
+app.use("/users", users);
+app.use("/deposits", deposits);
+app.use("/silver", silver);
+app.use("/balances", balances);
+app.use("/transactions", transactions);
+
+app.use((err: any, req: any, res: any, next: any) => {
+    console.error(err);
+
+    res.status(400).json({
+        error: err.message || "Something went wrong",
+    });
 });
 
 export default app;
