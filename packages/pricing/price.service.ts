@@ -1,13 +1,19 @@
 import { Decimal } from "@repo/utils";
 
 export class PriceService {
-    /**
-     * Returns price per gram of silver in INR
-     * In v1 this is static
-     * Later this can be replaced by live market data
-     */
-    async getSilverPricePerGram(): Promise<Decimal> {
-        // ₹100 per gram (mock)
-        return new Decimal(100);
+    private midPrice = new Decimal(75);
+
+    private spreadPercent = new Decimal(0.02); // 2%
+
+    async getBuyPrice(): Promise<Decimal> {
+        return this.midPrice.mul(
+            new Decimal(1).plus(this.spreadPercent.div(2))
+        );
+    }
+
+    async getSellPrice(): Promise<Decimal> {
+        return this.midPrice.mul(
+            new Decimal(1).minus(this.spreadPercent.div(2))
+        );
     }
 }
