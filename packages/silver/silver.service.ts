@@ -1,13 +1,15 @@
-import prisma from "@repo/db";
+import prisma, { AccountType } from "@repo/db";
 import { LedgerService } from "@repo/ledger";
 import { Decimal } from "@repo/utils";
 import { PriceService } from "@repo/pricing";
 import { LimitsService } from "@repo/limits";
 
+
 export class SilverService {
     private ledger = new LedgerService();
     private pricing = new PriceService();
     private limits = new LimitsService();
+    private feePercent = new Decimal(0.005); // 0.5%
 
     async buySilver(params: {
         userId: string;
@@ -16,52 +18,72 @@ export class SilverService {
     }) {
         const { userId, inrAmount, referenceId } = params;
 
+
         if (inrAmount.lte(0)) {
             throw new Error("INR amount must be > 0");
         }
 
-        // ✅ LIMIT: INR buy limits (before DB work)
-        await this.limits.validateBuyInr(inrAmount);
+        this.limits.validateBuyInr(inrAmount);
 
-        // 🔒 Fetch price internally
-        const pricePerGram = await this.pricing.getSilverPricePerGram();
-        if (pricePerGram.lte(0)) {
-            throw new Error("Invalid silver price");
-        }
+        const buyPrice = await this.pricing.getBuyPrice();
 
-        const silverQty = inrAmount.div(pricePerGram);
+        const fee = inrAmount.mul(this.feePercent);
+        const netInr = inrAmount.minus(fee);
+        const silverQty = netInr.div(buyPrice);
 
         return prisma.$transaction(async (tx) => {
+
             const [
                 userInr,
                 userSilver,
                 systemInr,
                 systemSilver,
+                systemRevenue,
             ] = await Promise.all([
-                tx.account.findFirst({ where: { userId, type: "USER_INR" } }),
-                tx.account.findFirst({ where: { userId, type: "USER_SILVER" } }),
-                tx.account.findFirst({ where: { type: "SYSTEM_INR" } }),
-                tx.account.findFirst({ where: { type: "SYSTEM_SILVER" } }),
+                tx.account.findFirst({ where: { userId, type: AccountType.USER_INR } }),
+                tx.account.findFirst({ where: { userId, type: AccountType.USER_SILVER } }),
+                tx.account.findFirst({ where: { type: AccountType.SYSTEM_INR } }),
+                tx.account.findFirst({ where: { type: AccountType.SYSTEM_SILVER } }),
+                tx.account.findFirst({ where: { type: AccountType.SYSTEM_REVENUE_INR } }),
             ]);
 
-            if (!userInr || !userSilver) {
+            if (!userInr || !userSilver)
                 throw new Error("User accounts missing");
-            }
-            if (!systemInr || !systemSilver) {
+
+            if (!systemInr || !systemSilver || !systemRevenue)
                 throw new Error("System accounts missing");
+            // 🔒 Reserve Guard
+            const currentSystemSilver = await this.ledger.getBalanceTx(
+                tx,
+                systemSilver.id,
+                "SILVER"
+            );
+
+            if (currentSystemSilver.lt(silverQty)) {
+                throw new Error("Insufficient system silver reserve");
             }
 
-            // INR leg: user → system
+            // 1️⃣ User pays net INR to liquidity
             await this.ledger.createEntryTx(tx, {
                 debitAccountId: userInr.id,
                 creditAccountId: systemInr.id,
-                amount: inrAmount,
+                amount: netInr,
                 asset: "INR",
                 referenceType: "BUY_SILVER",
                 referenceId,
             });
 
-            // SILVER leg: system → user
+            // 2️⃣ User pays fee to revenue
+            await this.ledger.createEntryTx(tx, {
+                debitAccountId: userInr.id,
+                creditAccountId: systemRevenue.id,
+                amount: fee,
+                asset: "INR",
+                referenceType: "BUY_FEE",
+                referenceId,
+            });
+
+            // 3️⃣ System gives silver
             await this.ledger.createEntryTx(tx, {
                 debitAccountId: systemSilver.id,
                 creditAccountId: userSilver.id,
@@ -73,7 +95,8 @@ export class SilverService {
 
             return {
                 silverQty,
-                pricePerGram,
+                buyPrice,
+                fee,
             };
         });
     }
@@ -89,13 +112,11 @@ export class SilverService {
             throw new Error("Silver quantity must be > 0");
         }
 
-        // 🔒 Fetch price internally
-        const pricePerGram = await this.pricing.getSilverPricePerGram();
-        if (pricePerGram.lte(0)) {
-            throw new Error("Invalid silver price");
-        }
+        const sellPrice = await this.pricing.getSellPrice();
 
-        const inrAmount = silverQty.mul(pricePerGram);
+        const grossInr = silverQty.mul(sellPrice);
+        const fee = grossInr.mul(this.feePercent);
+        const netInr = grossInr.minus(fee);
 
         return prisma.$transaction(async (tx) => {
             const [
@@ -103,33 +124,33 @@ export class SilverService {
                 userSilver,
                 systemInr,
                 systemSilver,
+                systemRevenue,
             ] = await Promise.all([
-                tx.account.findFirst({ where: { userId, type: "USER_INR" } }),
-                tx.account.findFirst({ where: { userId, type: "USER_SILVER" } }),
-                tx.account.findFirst({ where: { type: "SYSTEM_INR" } }),
-                tx.account.findFirst({ where: { type: "SYSTEM_SILVER" } }),
+                tx.account.findFirst({ where: { userId, type: AccountType.USER_INR } }),
+                tx.account.findFirst({ where: { userId, type: AccountType.USER_SILVER } }),
+                tx.account.findFirst({ where: { type: AccountType.SYSTEM_INR } }),
+                tx.account.findFirst({ where: { type: AccountType.SYSTEM_SILVER } }),
+                tx.account.findFirst({ where: { type: AccountType.SYSTEM_REVENUE_INR } }),
             ]);
 
-            if (!userInr || !userSilver) {
+            if (!userInr || !userSilver)
                 throw new Error("User accounts missing");
-            }
-            if (!systemInr || !systemSilver) {
-                throw new Error("System accounts missing");
-            }
 
-            // ✅ LIMIT: cannot sell more silver than owned
+            if (!systemInr || !systemSilver || !systemRevenue)
+                throw new Error("System accounts missing");
+
             const userSilverBalance = await this.ledger.getBalanceTx(
                 tx,
                 userSilver.id,
                 "SILVER"
             );
 
-            await this.limits.validateSellSilver(
+            this.limits.validateSellSilver(
                 silverQty,
                 userSilverBalance
             );
 
-            // SILVER leg: user → system
+            // 1️⃣ User gives silver
             await this.ledger.createEntryTx(tx, {
                 debitAccountId: userSilver.id,
                 creditAccountId: systemSilver.id,
@@ -139,19 +160,30 @@ export class SilverService {
                 referenceId,
             });
 
-            // INR leg: system → user
+            // 2️⃣ System pays net INR
             await this.ledger.createEntryTx(tx, {
                 debitAccountId: systemInr.id,
                 creditAccountId: userInr.id,
-                amount: inrAmount,
+                amount: netInr,
                 asset: "INR",
                 referenceType: "SELL_SILVER",
                 referenceId,
             });
 
+            // 3️⃣ System pays fee to revenue
+            await this.ledger.createEntryTx(tx, {
+                debitAccountId: systemInr.id,
+                creditAccountId: systemRevenue.id,
+                amount: fee,
+                asset: "INR",
+                referenceType: "SELL_FEE",
+                referenceId,
+            });
+
             return {
-                inrAmount,
-                pricePerGram,
+                netInr,
+                sellPrice,
+                fee,
             };
         });
     }
