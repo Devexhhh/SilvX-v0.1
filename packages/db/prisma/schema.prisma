@@ -12,6 +12,7 @@ enum AccountType {
   USER_SILVER
   SYSTEM_INR
   SYSTEM_SILVER
+  SYSTEM_REVENUE_INR
 }
 
 enum AssetType {
