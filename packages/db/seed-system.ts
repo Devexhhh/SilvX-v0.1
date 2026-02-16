@@ -1,31 +1,75 @@
-import prisma from "./index";
+import prisma, { AccountType } from "./index";
+import { Decimal } from "@repo/utils";
+import { LedgerService } from "@repo/ledger";
 
-async function seed() {
-    const existing = await prisma.account.findMany({
-        where: {
-            type: {
-                in: ["SYSTEM_INR", "SYSTEM_SILVER"],
-            },
-        },
+const ledger = new LedgerService();
+
+async function seedSystemAccounts() {
+    const systemAccounts = [
+        AccountType.SYSTEM_INR,
+        AccountType.SYSTEM_SILVER,
+        AccountType.SYSTEM_REVENUE_INR,
+    ];
+
+    for (const type of systemAccounts) {
+        const exists = await prisma.account.findFirst({
+            where: { type },
+        });
+
+        if (!exists) {
+            await prisma.account.create({
+                data: {
+                    type,
+                    userId: null,
+                },
+            });
+
+            console.log(`Created ${type}`);
+        }
+    }
+}
+
+async function seedReserve() {
+    const systemSilver = await prisma.account.findFirst({
+        where: { type: AccountType.SYSTEM_SILVER },
     });
 
-    if (existing.length === 2) {
-        console.log("System accounts already exist. Skipping seed.");
+    const systemInr = await prisma.account.findFirst({
+        where: { type: AccountType.SYSTEM_INR },
+    });
+
+    if (!systemSilver || !systemInr) {
+        throw new Error("System accounts missing");
+    }
+
+    // Check if reserve already seeded
+    const existingReserve = await prisma.ledgerEntry.findFirst({
+        where: { referenceType: "INITIAL_RESERVE" },
+    });
+
+    if (existingReserve) {
+        console.log("Reserve already seeded. Skipping.");
         return;
     }
 
-    await prisma.account.createMany({
-        data: [
-            { type: "SYSTEM_INR" },
-            { type: "SYSTEM_SILVER" },
-        ],
+    // Inject 1000 grams reserve
+    await ledger.createEntry({
+        debitAccountId: systemInr.id,
+        creditAccountId: systemSilver.id,
+        amount: new Decimal(1000),
+        asset: "SILVER",
+        referenceType: "INITIAL_RESERVE",
+        referenceId: "SEED_1",
     });
 
-    console.log("System accounts created.");
+    console.log("Seeded 1000g system silver reserve");
 }
 
-seed()
+async function main() {
+    await seedSystemAccounts();
+    await seedReserve();
+}
+
+main()
     .catch(console.error)
-    .finally(async () => {
-        await prisma.$disconnect();
-    });
+    .finally(() => prisma.$disconnect());
