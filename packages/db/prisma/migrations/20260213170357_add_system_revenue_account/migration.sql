@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "AccountType" ADD VALUE 'SYSTEM_REVENUE_INR';
