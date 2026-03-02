@@ -2,18 +2,37 @@ import { Decimal } from "@repo/utils";
 
 export class PriceService {
     private midPrice = new Decimal(75);
+    private spreadPercent = new Decimal(0.01);
+    private volatility = new Decimal(0.002);
 
-    private spreadPercent = new Decimal(0.02); // 2%
-
-    async getBuyPrice(): Promise<Decimal> {
-        return this.midPrice.mul(
-            new Decimal(1).plus(this.spreadPercent.div(2))
-        );
+    constructor() {
+        this.startSimulation();
     }
 
-    async getSellPrice(): Promise<Decimal> {
-        return this.midPrice.mul(
-            new Decimal(1).minus(this.spreadPercent.div(2))
-        );
+    private startSimulation() {
+        setInterval(() => {
+            const randomDirection = Math.random() > 0.5 ? 1 : -1;
+            const drift = this.midPrice.mul(this.volatility).mul(randomDirection);
+
+            this.midPrice = this.midPrice.plus(drift);
+
+            if (this.midPrice.lte(10)) {
+                this.midPrice = new Decimal(10);
+            }
+        }, 5000);
+    }
+
+    async getMidPrice() {
+        return this.midPrice;
+    }
+
+    async getBuyPrice() {
+        const halfSpread = this.midPrice.mul(this.spreadPercent).div(2);
+        return this.midPrice.plus(halfSpread);
+    }
+
+    async getSellPrice() {
+        const halfSpread = this.midPrice.mul(this.spreadPercent).div(2);
+        return this.midPrice.minus(halfSpread);
     }
 }
