@@ -15,7 +15,6 @@ export default function Home() {
     setRefresh((prev) => prev + 1);
   }
 
-
   async function createUser() {
     const res = await apiPost("/users", {
       phone: "9999999999",
