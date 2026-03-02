@@ -1,135 +1,342 @@
-# Turborepo starter
+# 🥈 Silvx-v0.1
 
-This Turborepo starter is maintained by the Turborepo core team.
+A full-stack digital silver trading platform built with:
 
-## Using this example
+- ⚙️ Express (API Layer)
+- 🧮 Prisma + PostgreSQL (Database)
+- 🧾 Double-Entry Ledger Engine
+- 💰 Spread + Fee Revenue Model
+- 🛡 Reserve Guard & Risk Controls
+- ⚡ Next.js (Frontend)
 
-Run the following command:
+This project simulates how a custodial commodity exchange works internally — including solvency enforcement and revenue segregation.
 
-```sh
-npx create-turbo@latest
-```
+---
 
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+# 🏗 Monorepo Structure
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+digital-silver/
+│
+├── apps/
+│   ├── api/        → Express backend
+│   └── web/        → Next.js frontend
+│
+├── packages/
+│   ├── db/         → Prisma schema + client
+│   ├── ledger/     → Double-entry accounting
+│   ├── silver/     → Trading engine
+│   ├── pricing/    → Spread price engine
+│   ├── limits/     → Risk validation
+│   └── utils/      → Decimal helpers
+│
+├── package.json
+└── turbo.json
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+---
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+# 🚀 Features
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+## Trading Engine
+- Buy / Sell digital silver
+- Spread pricing (Buy ≠ Sell)
+- 0.5% platform fee
+- Revenue account segregation
+- Atomic DB transactions
 
-### Develop
+## Risk Controls
+- Minimum & Maximum trade limits
+- User balance validation
+- Reserve guard (prevents insolvency)
+- Solvency monitoring endpoint
+- Global error middleware
 
-To develop all apps and packages, run the following command:
+## Admin Monitoring
+- Total user silver liability
+- System reserve balance
+- Reserve ratio
+- Revenue tracking
 
-```
-cd my-turborepo
+---
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+# 🛠 Setup & Installation
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+---
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## 1️⃣ Clone the Repository
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+```bash
+git clone https://github.com/your-username/digital-silver.git
+cd digital-silver
 ```
 
-### Remote Caching
+---
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## 2️⃣ Install Dependencies (Root)
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```bash
+npm install
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+This installs all workspace packages.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+---
+
+## 3️⃣ Setup PostgreSQL
+
+You can use Docker:
+
+```bash
+docker run --name prismadb \
+  -e POSTGRES_PASSWORD=devex \
+  -d -p 5432:5432 postgres
+```
+
+---
+
+## 4️⃣ Create Dummy `.env` Files
+
+### 📦 `packages/db/.env`
+
+```env
+DATABASE_URL="postgresql://postgres:devex@localhost:5432/postgres"
+```
+
+---
+
+### 🌐 `apps/api/.env`
+
+```env
+PORT=4000
+```
+
+---
+
+### 🖥 `apps/web/.env.local`
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000
+```
+
+---
+
+## 5️⃣ Run Prisma Migration
+
+```bash
+cd packages/db
+npx prisma migrate dev
+npx prisma generate
+```
+
+---
+
+## 6️⃣ Seed System Accounts & Reserve
+
+Create system accounts and initial reserve:
+
+```bash
+npx ts-node -P tsconfig.json seed-system.ts
+```
+
+This creates:
+
+- SYSTEM_INR
+- SYSTEM_SILVER
+- SYSTEM_REVENUE_INR
+- Initial 1000g reserve
+
+---
+
+# ▶ Running the Application
+
+---
+
+## 🔹 Start Backend (API)
+
+```bash
+cd apps/api
+npx ts-node src/server.ts
+```
+
+Server runs at:
 
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+http://localhost:4000
 ```
 
-## Useful Links
+Health check:
 
-Learn more about the power of Turborepo:
+```
+GET /health
+```
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+---
+
+## 🔹 Start Frontend (Web)
+
+In another terminal:
+
+```bash
+cd apps/web
+npm run dev
+```
+
+Frontend runs at:
+
+```
+http://localhost:3000
+```
+
+---
+
+# 📡 API Endpoints
+
+## 👤 Users
+
+```
+POST /users
+```
+
+---
+
+## 💳 Deposits
+
+```
+POST /deposits
+```
+
+---
+
+## 🥈 Silver Trading
+
+```
+POST /silver/buy
+POST /silver/sell
+```
+
+---
+
+## 💰 Balances
+
+```
+GET /balances/:userId
+```
+
+---
+
+## 📜 Transactions
+
+```
+GET /transactions/:userId
+```
+
+---
+
+## 🛡 Admin Reserve Status
+
+```
+GET /admin/reserve-status
+```
+
+Example response:
+
+```json
+{
+  "totalUserSilver": "29",
+  "systemSilver": "971",
+  "reserveRatio": "33.48",
+  "revenueINR": "12.50"
+}
+```
+
+---
+
+# 💰 Economic Model
+
+## Spread
+Buy price > Sell price  
+Platform earns from bid/ask difference.
+
+## Trading Fee
+0.5% per trade  
+Credited to `SYSTEM_REVENUE_INR`.
+
+## Reserve Guard
+Trading is blocked if system silver reserve is insufficient.
+
+---
+
+# 🧮 Accounting Model
+
+All movements follow double-entry bookkeeping.
+
+### BUY Flow
+
+1. USER_INR → SYSTEM_INR (net amount)
+2. USER_INR → SYSTEM_REVENUE_INR (fee)
+3. SYSTEM_SILVER → USER_SILVER
+
+---
+
+### SELL Flow
+
+1. USER_SILVER → SYSTEM_SILVER
+2. SYSTEM_INR → USER_INR (net)
+3. SYSTEM_INR → SYSTEM_REVENUE_INR (fee)
+
+---
+
+# 🧠 Risk Layers
+
+1. Trade amount validation
+2. User balance validation
+3. Reserve guard
+4. Atomic DB transactions
+5. Global error middleware
+6. Async route wrapper
+
+---
+
+# 🧪 Manual Testing Checklist
+
+1. Create User
+2. Deposit INR
+3. Buy Silver
+4. Sell Silver
+5. Open Prisma Studio:
+
+```bash
+cd packages/db
+npx prisma studio
+```
+
+Verify:
+- Ledger entries are balanced
+- Revenue increases
+- Reserve ratio updates
+- No negative balances
+
+---
+
+# 🔮 Future Enhancements
+
+- Dynamic price simulation
+- JWT authentication
+- Rate limiting
+- Real-time price updates
+- PDF statements
+- Circuit breaker (halt trading if reserve < 1)
+- Admin dashboard
+
+---
+
+# 📜 License
+
+MIT License
+
+---
+
+# 👨‍💻 Author
+
+Built by Devexhhh
