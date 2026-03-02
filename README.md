@@ -1,4 +1,4 @@
-# 🥈 Digital Silver Exchange
+# 🥈 Silvx-v0.1
 
 A full-stack digital silver trading platform built with:
 
