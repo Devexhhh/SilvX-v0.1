@@ -7,6 +7,7 @@ import silver from "./routes/silver";
 import balances from "./routes/balances";
 import transactions from "./routes/transactions";
 import admin from "./routes/admin";
+import pricing from "./routes/pricing";
 
 console.log("APP FILE LOADED");
 
@@ -23,13 +24,13 @@ app.get("/health", (_, res) => {
     res.json({ status: "ok" });
 });
 
-// 🔥 Mount domain routes
 app.use("/users", users);
 app.use("/deposits", deposits);
 app.use("/silver", silver);
 app.use("/balances", balances);
 app.use("/transactions", transactions);
 app.use("/admin", admin);
+app.use("/pricing", pricing);
 
 app.use((err: any, req: any, res: any, next: any) => {
     console.error("ERROR:", err.message);
