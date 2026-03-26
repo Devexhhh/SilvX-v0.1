@@ -77,4 +77,16 @@ router.get("/reserve-status", async (req, res, next) => {
     }
 });
 
+router.get("/transactions", async (req, res, next) => {
+    try {
+        const entries = await prisma.ledgerEntry.findMany({
+            orderBy: { createdAt: "desc" }
+        });
+
+        res.json(entries);
+    } catch (err) {
+        next(err);
+    }
+});
+
 export default router;
